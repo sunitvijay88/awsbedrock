@@ -1,1 +1,1 @@
-# awsbedrock
+This project is about research AWS Bedrock service.
