@@ -13,4 +13,4 @@ def generate_regression_models(input_files):
         print(results.summary())
     print('All regression models have been generated successfully')
 
-generate_regression_models(input_files='path/to/file1.csv path
+generate_regression_models(input_files='path/to/file1.csv path)
