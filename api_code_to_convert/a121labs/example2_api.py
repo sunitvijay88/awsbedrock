@@ -1,9 +1,11 @@
 import boto3
-    
 import json
 
-def api_example(prompt_data):
- 
+# Function to translate SAS code to Python
+def translate_sas_to_python(sas_code):
+    
+    prompt_data = f'convert below SAS code to Python :\n\n{sas_code}\n\nPython code:'
+
     bedrock = boto3.client(service_name='bedrock',region_name='us-east-1',endpoint_url='https://bedrock.us-east-1.amazonaws.com')
     bedrock.list_foundation_models()
 
@@ -15,7 +17,33 @@ def api_example(prompt_data):
     response = bedrock.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
     response_body = json.loads(response.get('body').read())
 
-    print(response_body.get('completions')[0].get('data').get('text'))
+    python_code = response_body.get('completions')[0].get('data').get('text')
 
-api_example(prompt_data ="""\"convert below code written in SAS to python. data data reformatted_data;\\n\\n   infile 'your_file_path';\\n\\n    input var1 var2 var3 var4 var5;\\n\\n   /* Convert selected variables to strings */\\n\\n    var1 = put(var1, $CHAR.);   var2 = put(var2, $CHAR.);   var3 = put(var3, $CHAR.);\\n\\n   /* Keep var4 and var5 as numeric */\\n   /* Output the reformatted data */\\n\\n    output;run;\\n\\n\\n```\\nimport pandas as pd\\n\\n# Read in the data\\ndf = pd.read_csv('your_file_path')\\n\\n# Convert selected variables to strings\\ndf['var1'] = df['var1'].astype(str)\\ndf['var2'] = df['var2'].astype(str)\\ndf['var3'] = df['var3'].astype(str)\\n\\n# Keep var4 and var5 as numeric\\n\\n# Output the reformatted data\\ndf.to_csv('reformatted_data.csv', index=False)\\n\\n```\\n\\n Note that this code assumes that the data in your file is comma-separated and that you have pandas installed.\"""")
+    print(python_code)
+    return python_code
 
+# Example SAS code to translate
+sas_code = '''
+data reformatted_data;
+   infile 'your_file_path';
+   input var1 var2 var3 var4 var5;
+
+   /* Convert selected variables to strings */
+   var1 = put(var1, $CHAR.);
+   var2 = put(var2, $CHAR.);
+   var3 = put(var3, $CHAR.);
+
+   /* Keep var4 and var5 as numeric */
+
+   /* Output the reformatted data */
+   output;
+run;
+'''
+
+###
+# Example SAS code to translate
+###
+
+python_code = translate_sas_to_python(sas_code)
+print("\n### generated simple SAS Code ###")
+print(python_code)
