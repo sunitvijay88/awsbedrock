@@ -1,0 +1,89 @@
+---
+# Multivariate ordinary least squares
+
+# Arguments:
+#
+# * *endog* - A 2D numpy array containing either the endogenous variable, ***y***, or a column vector of the residuals.
+# * *exog* - A 2D numpy array containing the specified exogenous variables, ***x***.
+# * *method* - A string containing one of two possible methods: {'df', 'pinv'}. The df computes regularized M-estimators, the 'pinv' computes testable generalized least absolute residuals (GLARs), which may be better numerically robust (see distinct papers by Bun and Jones).
+# * *tolerance* - A positive float used for numerical conditioning, e.g. 1e-8, if computation of the SVD fails.
+def multivariate_ols_fit(endog, exog, method='df', tolerance=1e-8):
+
+    # Calculate the matrices necessary for hypotheses testing
+    nobs, k_endog = endog.shape
+    nobs1, k_exog= exog.shape
+    if nobs != nobs1:
+        raise ValueError('x(n=%d) and y(n=%d) should have the same number of '
+                         'rows!' % (nobs1, nobs))
+    df_resid = nobs - k_exog
+
+    # Return regression parameters and residual sum of squares for chosen method
+    if method == 'pinv':
+        # Regression coefficients matrix
+        params = pinv(exog).dot(endog)
+
+        # Inverse of x'x
+        inv_cov = pinv(exog).dot(pinv(exog).T)
+        if matrix_rank(inv_cov,tol=tolerance) < k_exog:
+            raise ValueError('Covariance of x singular!')
+
+        # Residual sums of squares and cross products
+        t = exog.dot(params)
+        sscpr = np.subtract(endog.T.dot(endog), t.T.dot(t))
+    elif method == 'svd':
+        u, s, v = svd(exog, 0)
+        if (s > tolerance).sum() < len(s):
+            raise ValueError('Covariance of x singular!')
+        invs = [1./s for s in s]
+        params = v.T.dot(np.diag(invs)).dot(u.T).dot(endog)
+        inv_cov = v.T.dot(v.dot(np.diag(np.power(invs, 2))))
+        t = np.diag(s).dot(v).dot(params)
+        sscpr = np.subtract(endog.T.dot(endog), t.T.dot(t))
+    else:
+        raise ValueError('%s is not a supported method!' % method)
+
+    return (params, df_resid, inv_cov, sscpr)
+    # end_multivariate_ols_fit
+
+
+Method asked
+
+def _multivariate_ols_fit(endog, exog, method='svd', tolerance=1e-8):
+    y = endog
+    x = exog
+    nobs, k_endog = y.shape
+    nobs1, k_exog= x.shape
+    if nobs != nobs1:
+        raise ValueError('x(n=%d) and y(n=%d) should have the same number of '
+                         'rows!' % (nobs1, nobs))
+
+    # Calculate the matrices necessary for hypotheses testing
+    df_resid = nobs - k_exog
+    if method == 'pinv':
+        # Regression coefficients matrix
+        pinv_x = pinv(x)
+        params = pinv_x.dot(y)
+
+        # inverse of x'x
+        inv_cov = pinv_x.dot(pinv_x.T)
+        if matrix_rank(inv_cov,tol=tolerance) < k_exog:
+            raise ValueError('Covariance of x singular!')
+
+        # Sums of squares and cross-products of residuals
+        # Y'Y - (X * params)'B * params
+        t = x.dot(params)
+        sscpr = np.subtract(y.T.dot(y), t.T.dot(t))
+        return (params, df_resid, inv_cov, sscpr)
+    elif method == 'svd':
+        u, s, v = svd(x, 0)
+        if (s > tolerance).sum() < len(s):
+            raise ValueError('Covariance of x singular!')
+        invs = 1. / s
+
+        params = v.T.dot(np.diag(invs)).dot(u.T).dot(y)
+        inv_cov = v.T.dot(np.diag(np.power(invs, 2))).dot(v)
+        t = np.diag(s).dot(v).dot(params)
+        sscpr = np.subtract(y.T.dot(y), t.T.dot(t))
+        return (params, df_resid, inv_cov, sscpr)
+    else:
+        raise ValueError('%s is not a supported method!' % method)
