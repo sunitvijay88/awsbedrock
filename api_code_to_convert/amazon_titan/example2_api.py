@@ -9,7 +9,7 @@ def translate_sas_to_python(sas_code):
     bedrock = boto3.client(service_name='bedrock',region_name='us-east-1',endpoint_url='https://bedrock.us-east-1.amazonaws.com')
     bedrock.list_foundation_models()
 
-    body = json.dumps({"inputText": prompt_data, "textGenerationConfig":{ "maxTokenCount":4096, "temperature": 0, "topP": 1}})
+    body = json.dumps({"inputText": prompt_data, "textGenerationConfig":{ "maxTokenCount":4096, "temperature": 1, "topP": 1}})
     modelId = 'amazon.titan-tg1-large' # change this to use a different version from the model provider
     accept = 'application/json'
     contentType = 'application/json'
