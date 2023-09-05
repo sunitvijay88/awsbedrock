@@ -1,0 +1,103 @@
+
+.. function:: _multivariate_ols_fit(endog, exog, method='svd', tolerance=1e-8)
+   :return: [description]
+
+.. automethod:: _multivariate_ols_fit
+
+Fit an ordinary least squares model using maximum likelihood, with option
+for heteroskedasticity robust standard errors using either the ``pinv`` function
+from the scipy.linalg Python module, or Singular Value Decomposition (SVD).
+
+Parameters
+----------
+endog : 1D array_like
+    Vector of endogenous variables.
+exog : 2D array_like
+    Matrix of exogenous variables.
+method : {'pinv','svd'}
+    Method to calculate the variance-covariance matrix. Default is'svd'
+tolerance : float
+    Threshold for when a matrix is considered "near singular".
+
+Returns
+-------
+params : 1D array_like
+    Parameter vector.
+df_resid : scalar
+    degrees of freedom
+inv_cov : 2D array_like
+    Variance-covariance matrix
+sscpr : 2D array_like
+    Sums of squares and cross-products of residuals.
+
+Notes
+-----
+The number of endogenous variables must equal the number of observations,
+and the number of exogenous variables must equal the number of exogenous
+variables in the model estimated.
+
+Examples
+--------
+>>> import numpy as np
+>>> from statsmodels.iolib.regression import _multivariate_ols_fit
+>>> endog = np.array([1, 2, 3, 4])
+>>> exog = np.random.randn(4, 3)
+>>> params, df_resid, inv_cov, sscpr = _multivariate_ols_fit(
+>>>     endog, exog, method='pinv')
+>>> # less unstable than'svd' with same tolerance:
+>>> params, df_resid, inv_cov, sscpr = _multivariate_ols_fit(
+>>>     endog, exog, method='svd', tolerance=.01)
+>>> # Redundant parameters could be removed assuming exog is full rank:
+>>> x = np.random.randn(5, 3)
+>>> endog = np.ones(5)
+>>> (params, df_resid, inv_cov, sscpr) = _multivariate_ols_fit(
+>>>     endog, x, method='pinv')
+>>> # Turkey bones taken out just like that using Pinv method:
+>>> exog_t = np.c_[np.ones(3), -np.ones(3), np.ones(3)]
+>>> _multivariate_ols_fit(endog, exog_t, method='pinv')
+>>> array([  2.3433643,   0.60734947,  0.40717528, -0.31179908, -0.88295438,
+>>>       0.49553812])
+>>> (0, 5, 3, array([  2.3433643,   0.52954013, -0.08482171,...
+>>>                     -0.31179908, -0.88295438, -0.60734947,  0.40717528,
+>>>                   -2.48955389]))
+>>> (0, 5, 3, array([ 66.42793071, 68.8916 notes. Created on Tue Mar 7 14:54:04
+>>>                  09 2023
+>>> df_resid  0.52954013
+>>> inv_cov
+>>> sscpr  array([  0.45695427,   0.9464422, -{IP_ADDRESS}, -1.96810898]))
+>>>(0.0,
+>>>Notes
+>>>> endog = np.array([1, 2, 3, 4])
+>>>> exog = np.random.randn(4, 3)
+>>>> params, df_resid, inv_cov, sscpr = _multivariate_ols_fit(endog, exog, method='pinv')
+>>>> # less unstable than'svd' with same tolerance:
+>>>> params, df_resid, inv_cov, sscpr = _multivariate_ols_fit(endog, exog,
+>>>> tolerance=.01)
+>>>> # Redundant parameters could be removed assuming exog is full rank:
+>>>> x = np.random.randn(5, 3)
+>>>> endog = np.ones(5)
+>>>> (params, df_resid, inv_cov, sscpr) = _multivariate_ols_fit(
+>>>>     endog, x, method='pinv')
+>>>> # Turkey bones taken out just like that using Pinv method:
+>>>> exog_t = np.c_[np.ones(3), -np.ones(3), np.ones(3)]
+>>>> _multivariate_ols_fit(endog, exog_t, method='pinv')
+>>>> array([  2.3^4433643,   0.60^734947,  0.40^717528, -0.311^79908, -0.8^8295438,
+>>>>       0.49553812])
+>>>>Parameters
+>>>>-------
+>>>>endog : 1D array_like
+>>>>exog : 2D array_like
+>>>>method : {'pinv','svd'}
+>>>>tolerance : float
+>>>>Returns
+>>>>------
+>>>>params : 1D array_like
+>>>>df_resid : scalar
+>>>>inv_cov : 2D array_like
+>>>>sscpr : 2D array_likesee below
+(0, 5, 3, array([  2.3433643,   0.52954013, -0.08482171,...
+>>>                   -2.48955389]))
+>>>(0, 5, 3, array([ 66.42793071, 68.8916 2023 # notebook metadata
+>>>>                  0.57881177
+>>>                   -69.55621178 -68.8916  66.4279  78.5577  e77.5937
+>>>>                   -2.32407557])) # this is the same number as in the original docstring with the leading "E" in exog_t omitted

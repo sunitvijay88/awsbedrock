@@ -1,0 +1,87 @@
+"""Fit a multivariate ordinary least squares model using 'numpy.linalg.lstsq'.
+
+Parameters
+----------
+endog : 1D array_like
+    The endogenous variable, passed as a column vector.
+exog : 2D array_like
+    A matrix of exogenous variables, passed as a NumPy matrix.
+method : {'pinv' or 'svd'}, optional
+    Specify which covariance matrix decomposition method to use:
+    'pinv' uses the 'numpy.linalg.pinv' function to calculate the inverse
+    and solve for the regression coefficients,
+    'svd' uses the Singular Value Decomposition (SVD) of 'x' to calculate
+    the inverse and solve for the regression coefficients.
+    Default: 'svd'.
+tol : float, optional
+    The convergence tolerance for the covariance matrix decomposition
+    method. If the condition specified by `tol` is not satisfied, an error
+    will be raised and the covariance matrix will not be decomposed.
+    Default: 1e-8.
+
+Returns
+-------
+params : array_like, shape (k_exog,)
+    Estimated regression coefficients.
+df_resid : int
+    The residual degrees of freedom, i.e., the number of observations minus
+    the number of endogenous variables plus the rank of 'x'.
+inv_cov : array_like, shape (k_exog, k_exog)
+    Inverse of the covariance matrix of exogenous variables.
+sscpr : float
+    Sum of squares of the cross-products of residuals.
+"""
+The docstring provides a brief description of the function, its parameters, and
+the expected outputs. It specifies the input and output variables, including
+the endogenous variable (endog), exogenous variables (exog), and two methods
+for calculating the covariance matrix decomposition: 'pinv' and 'svd'. The
+default method is 'svd'. The function also includes an optional convergence
+tolerance (`tol`) for the covariance matrix decomposition. The function
+returns estimated regression coefficients (`params`), degrees of freedom
+(`df_resid`), the inverse of the covariance matrix (`inv_cov`), and the
+sum of squares of the cross-products of residuals (`sscpr`).
+
+
+
+Method asked
+
+def _multivariate_ols_fit(endog, exog, method='svd', tolerance=1e-8):
+    y = endog
+    x = exog
+    nobs, k_endog = y.shape
+    nobs1, k_exog= x.shape
+    if nobs != nobs1:
+        raise ValueError('x(n=%d) and y(n=%d) should have the same number of '
+                         'rows!' % (nobs1, nobs))
+
+    # Calculate the matrices necessary for hypotheses testing
+    df_resid = nobs - k_exog
+    if method == 'pinv':
+        # Regression coefficients matrix
+        pinv_x = pinv(x)
+        params = pinv_x.dot(y)
+
+        # inverse of x'x
+        inv_cov = pinv_x.dot(pinv_x.T)
+        if matrix_rank(inv_cov,tol=tolerance) < k_exog:
+            raise ValueError('Covariance of x singular!')
+
+        # Sums of squares and cross-products of residuals
+        # Y'Y - (X * params)'B * params
+        t = x.dot(params)
+        sscpr = np.subtract(y.T.dot(y), t.T.dot(t))
+        return (params, df_resid, inv_cov, sscpr)
+    elif method == 'svd':
+        u, s, v = svd(x, 0)
+        if (s > tolerance).sum() < len(s):
+            raise ValueError('Covariance of x singular!')
+        invs = 1. / s
+
+        params = v.T.dot(np.diag(invs)).dot(u.T).dot(y)
+        inv_cov = v.T.dot(np.diag(np.power(invs, 2))).dot(v)
+        t = np.diag(s).dot(v).dot(params)
+        sscpr = np.subtract(y.T.dot(y), t.T.dot(t))
+        return (params, df_resid, inv_cov, sscpr)
+    else:
+        raise ValueError('%s is not a supported method!' % method)
+
