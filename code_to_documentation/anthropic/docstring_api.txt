@@ -1,0 +1,76 @@
+```python
+def _multivariate_ols_fit(endog, exog, method='svd', tolerance=1e-8):
+    """
+    Fit a ordinary least squares model with multivariate response variables.
+
+    Parameters
+    ----------
+    endog : array_like
+        The dependent variables, shaped nobs x k_endog.
+    exog : array_like
+        The independent variables, shaped nobs x k_exog. 
+    method : {'pinv', 'svd'}, optional
+        The method used for matrix inversion. Default is 'svd'.
+    tolerance : float, optional
+        The threshold for determining the singular values that 
+        are used for matrix inversion. Default is 1e-8.
+
+    Returns
+    -------
+    params : ndarray
+        The regression coefficients, shaped (k_endog, k_exog).
+    df_resid : int
+        The residual degrees of freedom, equal to nobs - k_exog.
+    inv_cov : ndarray
+        The inverse of the covariance matrix of the parameter 
+        estimates. Shape (k_endog, k_endog).  
+    sscpr : ndarray
+        The sums of squares and cross-products of the residuals.
+        Shape (k_endog, k_endog).
+
+    Raises
+    ------
+    ValueError
+        If the shapes of endog and exog don't match.
+        If the covariance matrix of exog is singular.
+        If the method is not supported.
+
+    See Also
+    --------
+    statsmodels.regression.linear_model.OLS
+    statsmodels.regression.linear_model.GLS    
+    
+    Notes
+    -----
+    Fit is computed by one of two matrix inversion methods,
+    depending if method is 'pinv' or 'svd'. There may 
+    be precision differences between the two methods.
+    
+    This method does not automatically mean-center the data.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> endog = np.random.randn(100, 2)
+    >>> exog = np.random.randn(100, 3) 
+    >>> params, df, inv_cov, sscpr = _multivariate_ols_fit(endog, exog)
+    >>> params.shape
+    (2, 3)
+    >>> df
+    97
+    >>> inv_cov.shape
+    (2, 2)
+    >>> sscpr.shape  
+    (2, 2)
+    """
+```
+
+The docstring provides details on the parameters, returns values, exceptions, and examples for using the `_multivariate_ols_fit` method. Key information includes:
+
+- Parameters with description, type, shape and default values
+- Raises with description of conditions
+- Notes on implementation details 
+- Examples demonstrating basic usage
+- See Also links to related classes/functions
+
+The docstring follows PEP guidelines and NumPy documentation style to enable easy understanding and usage of the method.

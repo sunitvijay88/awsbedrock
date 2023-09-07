@@ -1,0 +1,95 @@
+ Here is a docstring following PEP guidelines for the _multivariate_ols_fit method:
+
+```python
+def _multivariate_ols_fit(endog, exog, method='svd', tolerance=1e-8):
+    """Fit a multivariate OLS model.
+
+    Parameters
+    ----------
+    endog : array-like
+        The dependent variable. 
+    exog : array-like
+        The independent variables. 
+    method : {'svd', 'pinv'}, default 'svd'
+        The method to use for matrix inversion. 
+    tolerance : float, default 1e-8
+        The threshold below which a singular value is considered zero.
+
+    Returns
+    -------
+    params : ndarray
+        The estimated regression coefficients.
+    df_resid : int 
+        Degrees of freedom of the residuals. 
+    inv_cov : ndarray
+        The inverse of the covariance matrix of the coefficients.
+    sscpr : ndarray
+        Sums of squares and cross-products of residuals.
+
+    Raises
+    ------
+    ValueError
+        If the number of rows in endog and exog do not match.
+        If the covariance matrix is singular.
+
+    See Also
+    --------
+    OLS : Ordinary least squares regression.
+
+    Notes
+    -----
+    The multivariare OLS model is::
+
+        y = X*params + e
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> endog = np.random.randn(10, 2) 
+    >>> exog = np.random.randn(10, 3)
+    >>> params, df, inv_cov, sscpr = _multivariate_ols_fit(endog, exog)
+
+    """
+```
+
+Method asked
+
+def _multivariate_ols_fit(endog, exog, method='svd', tolerance=1e-8):
+    y = endog
+    x = exog
+    nobs, k_endog = y.shape
+    nobs1, k_exog= x.shape
+    if nobs != nobs1:
+        raise ValueError('x(n=%d) and y(n=%d) should have the same number of '
+                         'rows!' % (nobs1, nobs))
+
+    # Calculate the matrices necessary for hypotheses testing
+    df_resid = nobs - k_exog
+    if method == 'pinv':
+        # Regression coefficients matrix
+        pinv_x = pinv(x)
+        params = pinv_x.dot(y)
+
+        # inverse of x'x
+        inv_cov = pinv_x.dot(pinv_x.T)
+        if matrix_rank(inv_cov,tol=tolerance) < k_exog:
+            raise ValueError('Covariance of x singular!')
+
+        # Sums of squares and cross-products of residuals
+        # Y'Y - (X * params)'B * params
+        t = x.dot(params)
+        sscpr = np.subtract(y.T.dot(y), t.T.dot(t))
+        return (params, df_resid, inv_cov, sscpr)
+    elif method == 'svd':
+        u, s, v = svd(x, 0)
+        if (s > tolerance).sum() < len(s):
+            raise ValueError('Covariance of x singular!')
+        invs = 1. / s
+
+        params = v.T.dot(np.diag(invs)).dot(u.T).dot(y)
+        inv_cov = v.T.dot(np.diag(np.power(invs, 2))).dot(v)
+        t = np.diag(s).dot(v).dot(params)
+        sscpr = np.subtract(y.T.dot(y), t.T.dot(t))
+        return (params, df_resid, inv_cov, sscpr)
+    else:
+        raise ValueError('%s is not a supported method!' % method)
